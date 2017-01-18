@@ -8,10 +8,10 @@ void ofApp::setup(){
 	
 	kinectPointsCtr = projPointsCtr = 0;
 
-	gui.setup();
+	gui.setup("Controls","kinect_settings.xml");
 	gui.add(minthreshold.setup("MINTHRESHOLD", 600, 0, 4500));
 	gui.add(maxthreshold.setup("MAXTHRESHOLD",1200, 0, 4500));
-	//gui.loadFromFile("kinect_settings.xml");
+	gui.loadFromFile("kinect_settings.xml");
 
 	kinect.open();
 	kinect.initDepthSource();
@@ -21,17 +21,22 @@ void ofApp::setup(){
 
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
 	//sand.allocate(512,424);
-	cv::Mat processImg(512, 424, CV_8UC3, cv::Scalar::all(0));
-	//cv::Mat img1 = cv::Mat::zeros(width / 2 + 2, 0, CV_8UC3);
+	//cv::Mat processImg(512, 424, CV_8UC3, cv::Scalar::all(0));
+	depthImgCV.allocate(512, 424);
+	
+	processImg = cv::Mat(depthImgCV.getCvImage());
 	
 	depthOffset.x = 0;
 	depthOffset.y = 0;
 	depthScale = 1;
 	projectorScale = 1;
+
+	totalPolygonPoints = 4;
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+	
 	kinect.update();
 	if (kinect.isFrameNew()) {
 		auto depth = kinect.getDepthSource();
@@ -87,32 +92,29 @@ void ofApp::update() {
 		depthImg.update();
 		
 	}
+
+	depthImgCV = depthImg;
+	
+	cv::fillConvexPoly(processImg, depthPolygon, totalPolygonPoints,cv::Scalar(255,255,255));
+	
+	
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	//kinect.getDepthSource()->draw(0, 0, width, height);
-	//kinect.getColorSource()->draw(width/2,0, 320, 240);
 	
-	depthImg.draw(0,0);
+	
+	depthImg.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
 	gui.draw();
-	
-	
-
-    
-	for (int n = 0; n < 4; n++)
+	depthImgCV.draw(depthOffset.x + depthImg.getWidth()*depthScale, depthOffset.y);
+	    
+	for (int n = 0; n < totalPolygonPoints; n++)
 	{
 		ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y,3);
 		ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
 
-     cv::Point polyPoint((kinectPoints[n].x-depthOffset.x), (kinectPoints[n].y-depthOffset.y ));
-       polygon.push_back(polyPoint);
+     
 	}
-
-
-	
-	                                        
-	cv::fillPoly(processImg, polygon ,cv::Scalar(128) );
 
 
 
@@ -144,7 +146,7 @@ void ofApp::keyPressed(int key){
 	
 	if (key == 'k')
 	{
-		for (int n = 0; n <4; n++)
+		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			cout << " " << kinectPoints[n];
 		}
@@ -172,25 +174,27 @@ void ofApp::mousePressed(int x, int y, int button){
 	
 	if (button == OF_MOUSE_BUTTON_LEFT)
 	{
-		//polyPoint.x = x;
-		//polyPoint.y = y;
 
-		if (kinectPointsCtr >= 4)
+		if (kinectPointsCtr >= totalPolygonPoints)
 		{
 			
 			kinectPointsCtr = 0;
 
 		}
-	//	if (poly.size()>=4) {
-	//		poly.erase;
-	//		poly.push_back(polyPoint);
-	//	}
 
 		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
 		kinectPointsCtr++;
 
-	//	poly.push_back(polyPoint);
+	
+
+		cv::Point polyPoint((kinectPoints[kinectPointsCtr].x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].y - depthOffset.y) / depthScale);
+		depthPolygon[kinectPointsCtr] = polyPoint;
 		
+
+		
+
+
+
 	}
 
 		
