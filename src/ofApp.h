@@ -33,13 +33,9 @@ class ofApp : public ofBaseApp{
 		ofxPanel gui;
 
 
-		
-		ofImage img;
-	    cv::Point pt;
-		ofxCvColorImage sand;
-		
-		//vector<int> join;
-		cv::Mat img1; 
+		ofImage depthImg;
+	    ofxCvColorImage sand;
+		cv::Mat processImg; 
 		
 
 		int width; 
@@ -47,9 +43,7 @@ class ofApp : public ofBaseApp{
 		int kinectPointsCtr;
 		int projPointsCtr;
 
-
-		cv::vector<cv::Point> pointList;
-
-		cv::Point kinectpoint[4];
+		cv::Point kinectPoints[4];
+		cv::Point projPoints[4];
 
 };

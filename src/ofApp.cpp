@@ -11,7 +11,7 @@ void ofApp::setup(){
 	gui.setup("kinect_settings","kinect_settings.xml");
 	gui.add(minthreshold.setup("MINTHRESHOLD", 20, 0, 4500));
 	gui.add(maxthreshold.setup("MAXTHRESHOLD", 40, 0, 4500));
-	
+	gui.loadFromFile("kinect_settings.xml");
 
 	kinect.open();
 	kinect.initDepthSource();
@@ -19,7 +19,7 @@ void ofApp::setup(){
 	
 	ofSetWindowShape(width, height);
 
-	img.allocate(512, 424, OF_IMAGE_COLOR);
+	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
 	sand.allocate(512,424);
 	//cv::Mat img1(400, 400, CV_8UC3);
 	//cv::Mat img1 = cv::Mat::zeros(width / 2 + 2, 0, CV_8UC3);
@@ -52,15 +52,13 @@ void ofApp::update() {
 				ofColor pixels;
 			
 				float r1 = 0,b1 = 0,g1 = 0;
-				if (a > 0 && a < 127.5) {
-
+				if (a > 0 && a < 127) {
 
 					 r1 = ofMap(a, 0, 127, 255, 0, true);
-
 					 g1 = ofMap(a, 0, 127, 0, 255, true);
 					 b1 = 0;
 				}
-				else if (a>127.5 && a<255){
+				else if (a>=127 && a<256){
 
 					 r1 = 0;
 					 g1 = ofMap(a, 127, 255, 255, 0, true);
@@ -73,7 +71,7 @@ void ofApp::update() {
 				pixels.g = g1;
 				pixels.b = b1;
 
-				img.setColor(x, y, pixels);
+				depthImg.setColor(x, y, pixels);
 
 						
 		   
@@ -83,11 +81,8 @@ void ofApp::update() {
 		}
 				
 
-				
-
-			
 		
-		img.update();
+		depthImg.update();
 		
 	}
 }
@@ -97,13 +92,17 @@ void ofApp::draw(){
 	//kinect.getDepthSource()->draw(0, 0, width, height);
 	//kinect.getColorSource()->draw(width/2,0, 320, 240);
 	
-	img.draw(0,0);
+	depthImg.draw(0,0);
 	gui.draw();
-	sand.draw(width/2+2,0);
+	//sand.draw(width/2+2,0);
 	
 
     
-	
+	for (int n = 0; n < 4; n++)
+	{
+		ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y,3);
+		ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
+	}
 
 
 
@@ -134,11 +133,15 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-	for (int n = 0; n < 4; n++)
+	
+	if (key == 'k')
 	{
-		cout<<" "<< kinectpoint[n];
+		for (int n = 0; n <4; n++)
+		{
+			cout << " " << kinectPoints[n];
+		}
+		cout << "\n";
 	}
-	cout << "\n";
 }
 
 //--------------------------------------------------------------
@@ -159,27 +162,18 @@ void ofApp::mouseDragged(int x, int y, int button){
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
 	
-	
-		pt.x = x;
-		pt.y = y;
-	
-		cout << "\nX" << pt.x;
-		cout << "\nY" << pt.y;
-
-		
-		
-		
-		if (kinectPointsCtr < 4) {
-			kinectpoint[kinectPointsCtr] = pt;
-			kinectPointsCtr++;
-		}
-		else 
+	if (button == OF_MOUSE_BUTTON_LEFT)
+	{
+		if (kinectPointsCtr >= 4) 
 		{
+			
 			kinectPointsCtr = 0;
-			kinectpoint[kinectPointsCtr] = pt;
 			
 		}
-		
+
+		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
+		kinectPointsCtr++;
+	}
 
 		
 
