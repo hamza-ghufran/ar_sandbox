@@ -1,15 +1,14 @@
 #include "ofApp.h"
 
-int width = 1024;
-int height = 768;
-int n = 0;
-
 //--------------------------------------------------------------
 void ofApp::setup(){
 
+	width = 1024;
+	height = 768;
 	
+	kinectPointsCtr = projPointsCtr = 0;
 
-	gui.setup();
+	gui.setup("kinect_settings","kinect_settings.xml");
 	gui.add(minthreshold.setup("MINTHRESHOLD", 20, 0, 4500));
 	gui.add(maxthreshold.setup("MAXTHRESHOLD", 40, 0, 4500));
 	
@@ -170,14 +169,14 @@ void ofApp::mousePressed(int x, int y, int button){
 		
 		
 		
-		if (n < 4) {
-			kinectpoint[n] = pt;
-			n++;
+		if (kinectPointsCtr < 4) {
+			kinectpoint[kinectPointsCtr] = pt;
+			kinectPointsCtr++;
 		}
 		else 
 		{
-			n = 0;
-			kinectpoint[n] = pt;
+			kinectPointsCtr = 0;
+			kinectpoint[kinectPointsCtr] = pt;
 			
 		}
 		

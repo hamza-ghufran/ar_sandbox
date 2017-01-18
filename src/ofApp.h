@@ -42,6 +42,11 @@ class ofApp : public ofBaseApp{
 		cv::Mat img1; 
 		
 
+		int width; 
+		int height; 
+		int kinectPointsCtr;
+		int projPointsCtr;
+
 
 		cv::vector<cv::Point> pointList;
 
