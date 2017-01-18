@@ -8,10 +8,10 @@ void ofApp::setup(){
 	
 	kinectPointsCtr = projPointsCtr = 0;
 
-	gui.setup("kinect_settings","kinect_settings.xml");
-	gui.add(minthreshold.setup("MINTHRESHOLD", 20, 0, 4500));
-	gui.add(maxthreshold.setup("MAXTHRESHOLD", 40, 0, 4500));
-	gui.loadFromFile("kinect_settings.xml");
+	gui.setup();
+	gui.add(minthreshold.setup("MINTHRESHOLD", 600, 0, 4500));
+	gui.add(maxthreshold.setup("MAXTHRESHOLD",1200, 0, 4500));
+	//gui.loadFromFile("kinect_settings.xml");
 
 	kinect.open();
 	kinect.initDepthSource();
@@ -20,12 +20,14 @@ void ofApp::setup(){
 	ofSetWindowShape(width, height);
 
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
-	sand.allocate(512,424);
-	//cv::Mat img1(400, 400, CV_8UC3);
+	//sand.allocate(512,424);
+	cv::Mat processImg(512, 424, CV_8UC3, cv::Scalar::all(0));
 	//cv::Mat img1 = cv::Mat::zeros(width / 2 + 2, 0, CV_8UC3);
 	
-
-	
+	depthOffset.x = 0;
+	depthOffset.y = 0;
+	depthScale = 1;
+	projectorScale = 1;
 }
 
 //--------------------------------------------------------------
@@ -94,7 +96,7 @@ void ofApp::draw(){
 	
 	depthImg.draw(0,0);
 	gui.draw();
-	//sand.draw(width/2+2,0);
+	
 	
 
     
@@ -102,9 +104,15 @@ void ofApp::draw(){
 	{
 		ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y,3);
 		ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
+
+     cv::Point polyPoint((kinectPoints[n].x-depthOffset.x), (kinectPoints[n].y-depthOffset.y ));
+       polygon.push_back(polyPoint);
 	}
 
 
+	
+	                                        
+	cv::fillPoly(processImg, polygon ,cv::Scalar(128) );
 
 
 
@@ -164,15 +172,25 @@ void ofApp::mousePressed(int x, int y, int button){
 	
 	if (button == OF_MOUSE_BUTTON_LEFT)
 	{
-		if (kinectPointsCtr >= 4) 
+		//polyPoint.x = x;
+		//polyPoint.y = y;
+
+		if (kinectPointsCtr >= 4)
 		{
 			
 			kinectPointsCtr = 0;
-			
+
 		}
+	//	if (poly.size()>=4) {
+	//		poly.erase;
+	//		poly.push_back(polyPoint);
+	//	}
 
 		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
 		kinectPointsCtr++;
+
+	//	poly.push_back(polyPoint);
+		
 	}
 
 		

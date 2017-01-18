@@ -34,7 +34,7 @@ class ofApp : public ofBaseApp{
 
 
 		ofImage depthImg;
-	    ofxCvColorImage sand;
+	   // ofxCvColorImage sand;
 		cv::Mat processImg; 
 		
 
@@ -45,5 +45,17 @@ class ofApp : public ofBaseApp{
 
 		cv::Point kinectPoints[4];
 		cv::Point projPoints[4];
+		
+		
+		
+		
+		cv::Point depthOffset;
+		float depthScale;
+		float projectorScale;
+		cv::Point projectorOffset;
+
+
+		cv::vector<cv::Point> polygon ;
+		//cv::Point polyPoint;
 
 };
