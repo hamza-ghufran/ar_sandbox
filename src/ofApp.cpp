@@ -29,6 +29,9 @@ void ofApp::setup(){
 	depthOffset.x = 0;
 	depthOffset.y = 0;
 	depthScale = 1;
+	
+	projectorOffset.x = 0;
+	projectorOffset.y = 0;
 	projectorScale = 1;
 
 	totalPolygonPoints = 4;
@@ -146,9 +149,16 @@ void ofApp::keyPressed(int key){
 	
 	if (key == 'k')
 	{
+		cout << "\n\n kinect points: \n";
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			cout << " " << kinectPoints[n];
+		}
+		cout << "\n polygon points: \n";
+		
+		for (int n = 0; n <totalPolygonPoints; n++)
+		{
+			cout << " " << depthPolygon[n];
 		}
 		cout << "\n";
 	}
@@ -183,14 +193,11 @@ void ofApp::mousePressed(int x, int y, int button){
 		}
 
 		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
-		kinectPointsCtr++;
-
-	
-
+		
 		cv::Point polyPoint((kinectPoints[kinectPointsCtr].x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].y - depthOffset.y) / depthScale);
 		depthPolygon[kinectPointsCtr] = polyPoint;
 		
-
+		kinectPointsCtr++;
 		
 
 
