@@ -4,11 +4,11 @@
 void ofApp::setup(){
 
 	primaryScreenWidth = 1366;
-	projectorWidth = 1920.0 *0.5;
-	projectorHeight = 1080.0 * 0.5;
+	projectorWidth = 1920.0 *0.125;
+	projectorHeight = 1080.0 * 0.125;
 
-	projScaleX = 2;
-	projScaleY = 2;
+	projScaleX = 8;
+	projScaleY = 8;
 
 	window_width = projectorWidth*projScaleX + primaryScreenWidth;
 	window_height = projectorHeight*projScaleY;
@@ -71,29 +71,36 @@ void ofApp::update() {
 
 				int d = depthPixel[set];
 
-				float a = ofMap(d, minthreshold, maxthreshold, 0, 255, true);
+				float a = ofMap(d, minthreshold, maxthreshold, 0, 1, true);
 
 				ofColor pixels;
 			
 				float r1 = 0,b1 = 0,g1 = 0;
-				if (a > 0 && a < 127) {
-
-					 r1 = ofMap(a, 0, 127, 255, 0, true);
-					 g1 = ofMap(a, 0, 127, 0, 255, true);
+				if (a > 0 && a < 0.55) {
+				
+					 r1 = ofMap(a, 0, 0.5, 1, 0, true);
+					 g1 = ofMap(a, 0, 0.5, 0,1, true);
 					 b1 = 0;
 				}
-				else if (a>=127 && a<256){
+				if (a > 0.55 && a < 0.57)
+				{
+					r1 = 0.6980;
+					g1 = 0.1333;
+					b1=0.1333;
+				}
+
+				else if (a>=0.57 && a<1){
 
 					 r1 = 0;
-					 g1 = ofMap(a, 127, 255, 255, 0, true);
-					 b1 = ofMap(a, 127, 255, 0, 255, true);
+					 g1 = ofMap(a, 0.5, 1, 1, 0, true);
+					 b1 = ofMap(a, 0.5, 1, 0, 1, true);
 					
 				}
 
-
-				pixels.r = r1;
-				pixels.g = g1;
-				pixels.b = b1;
+				//GUI HERE
+				pixels.r = r1*255;
+				pixels.g = g1*255;
+				pixels.b = b1*255;
 
 				depthImg.setColor(x, y, pixels);
 				
@@ -180,6 +187,7 @@ void ofApp::keyPressed(int key){
 
 	else if (key == 'c')
 	{
+        //GUI HERE
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			srcArray.push_back(depthPolygon[n]);
@@ -191,6 +199,7 @@ void ofApp::keyPressed(int key){
 
 	else if (key == 'C')
 	{
+		//GUI HERE
 		srcArray.clear();
 		dstArray.clear();
 		calibrated = false;
@@ -234,6 +243,8 @@ void ofApp::mousePressed(int x, int y, int button){
 		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
 		
 		cv::Point polyPoint((kinectPoints[kinectPointsCtr].x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].y - depthOffset.y) / depthScale);
+	
+		//GUI HERE
 		depthPolygon[kinectPointsCtr] = polyPoint;
 		
 		kinectPointsCtr++;
@@ -256,6 +267,8 @@ void ofApp::mousePressed(int x, int y, int button){
 		projPoints[projPointsCtr] = cvPoint(x, y);
 
 		cv::Point polyPoint((projPoints[projPointsCtr].x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].y - projOffset.y) / projScaleY);
+		
+		//GUI HERE
 		projPolygon[projPointsCtr] = polyPoint;
 
 		projPointsCtr++;
