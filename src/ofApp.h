@@ -34,11 +34,13 @@ class ofApp : public ofBaseApp{
 
 
 		ofImage depthImg;
-	    // ofxCvColorImage sand;
-
+		ofxCvColorImage depthImgCV;
+		cv::Mat depthImgMat;
+		
 		//To process the image
 		cv::Mat processImg; 
-		ofxCvColorImage depthImgCV;
+		ofxCvColorImage projectionImg;
+
 		
 
 		int width; 
@@ -52,14 +54,22 @@ class ofApp : public ofBaseApp{
 		
 		cv::Point depthOffset;
 		float depthScale;
-		float projectorScale;
-		cv::Point projectorOffset;
+		
+		float projScaleX,projScaleY;
+		float projectorWidth;
+		float projectorHeight;
+		
+		cv::Point projOffset;
 
 
 		cv::Point depthPolygon[4];
+		cv::Point projPolygon[4];
 		
-		cv::Point projectionPolygon[4];
-		
+		cv::vector<cv::Point2f > srcArray;
+		cv::vector<cv::Point2f > dstArray;
+
+		bool calibrated;
+		cv::Mat homographyMatrix;
 		
 
 };

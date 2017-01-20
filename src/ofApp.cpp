@@ -3,8 +3,8 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	width = 1024;
-	height = 768;
+	width = 1920 + 1366;
+	height = 1080;
 	
 	kinectPointsCtr = projPointsCtr = 0;
 
@@ -15,26 +15,35 @@ void ofApp::setup(){
 
 	kinect.open();
 	kinect.initDepthSource();
-	kinect.initColorSource();
+	//kinect.initColorSource();
 	
 	ofSetWindowShape(width, height);
-
-	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
-	//sand.allocate(512,424);
-	//cv::Mat processImg(512, 424, CV_8UC3, cv::Scalar::all(0));
-	depthImgCV.allocate(512, 424);
-	
-	processImg = cv::Mat(depthImgCV.getCvImage());
-	
-	depthOffset.x = 0;
-	depthOffset.y = 0;
+		
+	depthOffset.x = 400;
+	depthOffset.y = 230;
 	depthScale = 1;
-	
-	projectorOffset.x = 0;
-	projectorOffset.y = 0;
-	projectorScale = 1;
+
+	projectorWidth = 1920.0 *0.5;
+	projectorHeight = 1080.0 * 0.5;
+		
+	projScaleX = 2;
+	projScaleY = 2;
+
+	projOffset.x = 1366;
+	projOffset.y = 0;
 
 	totalPolygonPoints = 4;
+
+	calibrated = false;
+
+	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
+	projectionImg.allocate(projectorWidth, projectorHeight);
+	
+	depthImgCV.allocate(512, 424);
+
+	processImg = cv::Mat(projectionImg.getCvImage());
+	depthImgMat = cv::Mat(depthImgCV.getCvImage());
+
 }
 
 //--------------------------------------------------------------
@@ -82,23 +91,25 @@ void ofApp::update() {
 				pixels.b = b1;
 
 				depthImg.setColor(x, y, pixels);
-
-						
-		   
-						
-						
+				
 			}
 		}
-				
-
 		
 		depthImg.update();
 		
 	}
 
 	depthImgCV = depthImg;
+	projectionImg.set(0);
+
+	cv::fillConvexPoly(processImg, projPolygon, totalPolygonPoints,cv::Scalar(255,0,0));
+	cv::fillConvexPoly(depthImgMat, depthPolygon, totalPolygonPoints, cv::Scalar(255, 0, 255));
 	
-	cv::fillConvexPoly(processImg, depthPolygon, totalPolygonPoints,cv::Scalar(255,255,255));
+	if (calibrated)
+	{
+		homographyMatrix = cv::findHomography(srcArray,dstArray);
+		cv::warpPerspective(depthImgMat, processImg, homographyMatrix, processImg.size());
+	}
 	
 	
 }
@@ -107,33 +118,30 @@ void ofApp::update() {
 void ofApp::draw(){
 	
 	
-	depthImg.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
+	depthImgCV.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
 	gui.draw();
-	depthImgCV.draw(depthOffset.x + depthImg.getWidth()*depthScale, depthOffset.y);
+	projectionImg.draw(projOffset.x, projOffset.y,projectorWidth * projScaleX,projectorHeight * projScaleY);
 	    
 	for (int n = 0; n < totalPolygonPoints; n++)
 	{
+		//ofSetColor(ofColor(255, 255, 0));
 		ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y,3);
 		ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
-
-     
+		
+		//ofSetColor(ofColor(0, 255, 255));
+		ofDrawCircle(projPoints[n].x, projPoints[n].y, 3);
+		ofDrawBitmapString(ofToString(n), projPoints[n].x, projPoints[n].y);
+	 
 	}
 
-
+	//ofSetColor(ofColor(255, 255, 255));
 
 	//cv::Mat my(sand);
 
 	//cv::ellipse(sand, cv::Point(pt.x, pt.y), cv::Size(100.0, 160.0), 45, 0, 360, cv::Scalar(255, 0, 0), 1, 8);
 	
-	
-	
-
-
-
-	
 	//imshow("Image", img2);
 	
-
 	/*
 	ofSetColor(ofColor::white);
 
@@ -161,6 +169,33 @@ void ofApp::keyPressed(int key){
 			cout << " " << depthPolygon[n];
 		}
 		cout << "\n";
+	}
+
+	else if (key == 'c')
+	{
+		for (int n = 0; n <totalPolygonPoints; n++)
+		{
+			//cv::Point pointsrc(kinectPoints[n].x, kinectPoints[n].y);
+			srcArray.push_back(depthPolygon[n]);
+
+			//cv::Vec2i pointdst(projPoints[n].x, projPoints[n].y);
+			dstArray.push_back(projPolygon[n]);
+			
+		}
+		calibrated = true;
+	}
+
+	else if (key == 'C')
+	{
+		srcArray.clear();
+		dstArray.clear();
+		calibrated = false;
+	}
+	
+	else if (key == 'd')
+	{
+		cout << "\n\tHomography : " << homographyMatrix << "\n";
+		
 	}
 }
 
@@ -204,6 +239,27 @@ void ofApp::mousePressed(int x, int y, int button){
 
 	}
 
+	else if (button == OF_MOUSE_BUTTON_RIGHT)
+	{
+
+		if (projPointsCtr >= totalPolygonPoints)
+		{
+
+			projPointsCtr = 0;
+
+		}
+
+		projPoints[projPointsCtr] = cvPoint(x, y);
+
+		cv::Point polyPoint((projPoints[projPointsCtr].x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].y - projOffset.y) / projScaleY);
+		projPolygon[projPointsCtr] = polyPoint;
+
+		projPointsCtr++;
+
+
+
+
+	}
 		
 
 
