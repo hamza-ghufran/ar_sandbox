@@ -3,8 +3,15 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	width = 1920 + 1366;
-	height = 1080;
+	primaryScreenWidth = 1366;
+	projectorWidth = 1920.0 *0.5;
+	projectorHeight = 1080.0 * 0.5;
+
+	projScaleX = 2;
+	projScaleY = 2;
+
+	window_width = projectorWidth*projScaleX + primaryScreenWidth;
+	window_height = projectorHeight*projScaleY;
 	
 	kinectPointsCtr = projPointsCtr = 0;
 
@@ -17,17 +24,13 @@ void ofApp::setup(){
 	kinect.initDepthSource();
 	//kinect.initColorSource();
 	
-	ofSetWindowShape(width, height);
+	ofSetWindowShape(window_width, window_height);
 		
 	depthOffset.x = 400;
 	depthOffset.y = 230;
 	depthScale = 1;
 
-	projectorWidth = 1920.0 *0.5;
-	projectorHeight = 1080.0 * 0.5;
-		
-	projScaleX = 2;
-	projScaleY = 2;
+	
 
 	projOffset.x = 1366;
 	projOffset.y = 0;
@@ -37,13 +40,15 @@ void ofApp::setup(){
 	calibrated = false;
 
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
-	projectionImg.allocate(projectorWidth, projectorHeight);
-	
 	depthImgCV.allocate(512, 424);
+
+	projectionImg.allocate(projectorWidth, projectorHeight);
+	maskImg.allocate(projectorWidth, projectorHeight);
+	
 
 	processImg = cv::Mat(projectionImg.getCvImage());
 	depthImgMat = cv::Mat(depthImgCV.getCvImage());
-
+	maskImgMat = cv::Mat(maskImg.getCvImage());
 }
 
 //--------------------------------------------------------------
@@ -101,14 +106,18 @@ void ofApp::update() {
 
 	depthImgCV = depthImg;
 	projectionImg.set(0);
+	maskImg.set(0);
 
-	cv::fillConvexPoly(processImg, projPolygon, totalPolygonPoints,cv::Scalar(255,0,0));
-	cv::fillConvexPoly(depthImgMat, depthPolygon, totalPolygonPoints, cv::Scalar(255, 0, 255));
+
+	cv::fillConvexPoly(maskImgMat, projPolygon, totalPolygonPoints,cv::Scalar(255,255,255));
+	//cv::fillConvexPoly(depthImgMat, depthPolygon, totalPolygonPoints, cv::Scalar(0, 255, 0));
 	
 	if (calibrated)
 	{
 		homographyMatrix = cv::findHomography(srcArray,dstArray);
 		cv::warpPerspective(depthImgMat, processImg, homographyMatrix, processImg.size());
+		cv::bitwise_and(processImg, maskImgMat, processImg);
+		
 	}
 	
 	
@@ -120,35 +129,33 @@ void ofApp::draw(){
 	
 	depthImgCV.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
 	gui.draw();
-	projectionImg.draw(projOffset.x, projOffset.y,projectorWidth * projScaleX,projectorHeight * projScaleY);
-	    
-	for (int n = 0; n < totalPolygonPoints; n++)
+
+	if (calibrated)
 	{
-		//ofSetColor(ofColor(255, 255, 0));
-		ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y,3);
-		ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
-		
-		//ofSetColor(ofColor(0, 255, 255));
-		ofDrawCircle(projPoints[n].x, projPoints[n].y, 3);
-		ofDrawBitmapString(ofToString(n), projPoints[n].x, projPoints[n].y);
-	 
+		projectionImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
 	}
+	else
+	{
+		maskImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
 
-	//ofSetColor(ofColor(255, 255, 255));
+		for (int n = 0; n < totalPolygonPoints; n++)
+		{
+			ofSetColor(ofColor(0, 255, 0));
+			ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y, 3);
+			ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
 
-	//cv::Mat my(sand);
+			ofSetColor(ofColor(255, 0, 0));
+			ofDrawCircle(projPoints[n].x, projPoints[n].y, 3);
+			ofDrawBitmapString(ofToString(n), projPoints[n].x, projPoints[n].y);
 
-	//cv::ellipse(sand, cv::Point(pt.x, pt.y), cv::Size(100.0, 160.0), 45, 0, 360, cv::Scalar(255, 0, 0), 1, 8);
+		}
+
+		ofSetColor(ofColor(255, 255, 255));
+	}
+	    
 	
-	//imshow("Image", img2);
-	
-	/*
-	ofSetColor(ofColor::white);
 
-	ofBeginShape();
-	ofRect(points.x, points.y, 10, 10);
-	ofEndShape();
-	*/
+	
 
 }
 
@@ -175,10 +182,7 @@ void ofApp::keyPressed(int key){
 	{
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
-			//cv::Point pointsrc(kinectPoints[n].x, kinectPoints[n].y);
 			srcArray.push_back(depthPolygon[n]);
-
-			//cv::Vec2i pointdst(projPoints[n].x, projPoints[n].y);
 			dstArray.push_back(projPolygon[n]);
 			
 		}

@@ -41,10 +41,13 @@ class ofApp : public ofBaseApp{
 		cv::Mat processImg; 
 		ofxCvColorImage projectionImg;
 
+		//To Mask the projection
+		ofxCvColorImage maskImg;
+		cv::Mat maskImgMat;
 		
-
-		int width; 
-		int height; 
+		int primaryScreenWidth;
+		int window_width; 
+		int window_height; 
 		int totalPolygonPoints;
 		int kinectPointsCtr;
 		int projPointsCtr;
