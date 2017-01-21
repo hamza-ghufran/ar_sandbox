@@ -25,12 +25,22 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+		
+
 
 		ofxKFW2::Device kinect;
 
 		ofxFloatSlider minthreshold;
 		ofxFloatSlider maxthreshold;
+
+
+		
+		ofParameter <ofPoint> kinectPoints[4];
+		ofParameter<ofPoint> projPoints[4];
+		
+
 		ofxPanel gui;
+
 
 
 		ofImage depthImg;
@@ -52,8 +62,8 @@ class ofApp : public ofBaseApp{
 		int kinectPointsCtr;
 		int projPointsCtr;
 
-		cv::Point kinectPoints[4];
-		cv::Point projPoints[4];
+		//cv::Point kinectPoints[4];
+		//cv::Point projPoints[4];
 		
 		cv::Point depthOffset;
 		float depthScale;

@@ -18,7 +18,27 @@ void ofApp::setup(){
 	gui.setup("Controls","kinect_settings.xml");
 	gui.add(minthreshold.setup("MINTHRESHOLD", 600, 0, 4500));
 	gui.add(maxthreshold.setup("MAXTHRESHOLD",1200, 0, 4500));
+	
+
+	gui.add(kinectPoints[0].set("DEPTH FIRST", ofPoint(0, 0)));
+	gui.add(kinectPoints[1].set("DEPTH SECOND", ofPoint(0, 0)));
+	gui.add(kinectPoints[2].set("DEPTH THIRD", ofPoint(0, 0)));
+	gui.add(kinectPoints[3].set("DEPTH FOURTH", ofPoint(0, 0)));
+	
+
+	gui.add(projPoints[0].set("HOMO FIRST", ofPoint(0, 0)));
+	gui.add(projPoints[1].set("HOMO SECOND", ofPoint(0, 0)));
+	gui.add(projPoints[2].set("HOMO THIRD", ofPoint(0, 0)));
+	gui.add(projPoints[3].set("HOMO FOURTH", ofPoint(0, 0)));
+	
+
+
 	gui.loadFromFile("kinect_settings.xml");
+	//gui.add(TOGGLE HOMO POINTS)
+
+	//gui.add(SAVE PROJECTION POINTS)
+	//gui.add(TOGGLE PROJECTION POINTS
+
 
 	kinect.open();
 	kinect.initDepthSource();
@@ -37,7 +57,7 @@ void ofApp::setup(){
 
 	totalPolygonPoints = 4;
 
-	calibrated = false;
+	calibrated = true;
 
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
 	depthImgCV.allocate(512, 424);
@@ -49,6 +69,22 @@ void ofApp::setup(){
 	processImg = cv::Mat(projectionImg.getCvImage());
 	depthImgMat = cv::Mat(depthImgCV.getCvImage());
 	maskImgMat = cv::Mat(maskImg.getCvImage());
+
+
+	for (int j=0;j<totalPolygonPoints;j++)
+	{
+		cv::Point polyPoint((kinectPoints[j].get().x - depthOffset.x) / depthScale, (kinectPoints[j].get().y - depthOffset.y) / depthScale);
+		depthPolygon[j] = polyPoint;
+
+		cv::Point polyPoint1((projPoints[j].get().x - projOffset.x) / projScaleX, (projPoints[j].get().y - projOffset.y) / projScaleY);
+		
+		projPolygon[j] = polyPoint1;
+
+		srcArray.push_back(depthPolygon[j]);
+		dstArray.push_back(projPolygon[j]);
+	}
+	
+
 }
 
 //--------------------------------------------------------------
@@ -76,20 +112,15 @@ void ofApp::update() {
 				ofColor pixels;
 			
 				float r1 = 0,b1 = 0,g1 = 0;
-				if (a > 0 && a < 0.55) {
+				if (a > 0 && a < 0.5) {
 				
 					 r1 = ofMap(a, 0, 0.5, 1, 0, true);
 					 g1 = ofMap(a, 0, 0.5, 0,1, true);
 					 b1 = 0;
 				}
-				if (a > 0.55 && a < 0.57)
-				{
-					r1 = 0.6980;
-					g1 = 0.1333;
-					b1=0.1333;
-				}
+			
 
-				else if (a>=0.57 && a<1){
+				else if (a>=0.5 && a<1){
 
 					 r1 = 0;
 					 g1 = ofMap(a, 0.5, 1, 1, 0, true);
@@ -145,15 +176,20 @@ void ofApp::draw(){
 	{
 		maskImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
 
+		
+
 		for (int n = 0; n < totalPolygonPoints; n++)
 		{
+			//kinectPoints[n].set(ofColor(0, 255, 0));
 			ofSetColor(ofColor(0, 255, 0));
-			ofDrawCircle(kinectPoints[n].x, kinectPoints[n].y, 3);
-			ofDrawBitmapString(ofToString(n), kinectPoints[n].x, kinectPoints[n].y);
+			ofDrawCircle(kinectPoints[n].get().x, kinectPoints[n].get().y, 3);
+			ofDrawBitmapString(ofToString(n), kinectPoints[n].get().x, kinectPoints[n].get().y);
+			
+			
 
 			ofSetColor(ofColor(255, 0, 0));
-			ofDrawCircle(projPoints[n].x, projPoints[n].y, 3);
-			ofDrawBitmapString(ofToString(n), projPoints[n].x, projPoints[n].y);
+			ofDrawCircle(projPoints[n].get().x, projPoints[n].get().y, 3);
+			ofDrawBitmapString(ofToString(n), projPoints[n].get().x, projPoints[n].get().y);
 
 		}
 
@@ -194,6 +230,8 @@ void ofApp::keyPressed(int key){
 			dstArray.push_back(projPolygon[n]);
 			
 		}
+
+
 		calibrated = true;
 	}
 
@@ -239,14 +277,13 @@ void ofApp::mousePressed(int x, int y, int button){
 			kinectPointsCtr = 0;
 
 		}
-
-		kinectPoints[kinectPointsCtr] = cvPoint(x, y);
 		
-		cv::Point polyPoint((kinectPoints[kinectPointsCtr].x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].y - depthOffset.y) / depthScale);
-	
-		//GUI HERE
+		kinectPoints[kinectPointsCtr].set(ofPoint(x, y));
+		
+		cv::Point polyPoint((kinectPoints[kinectPointsCtr].get().x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].get().y - depthOffset.y) / depthScale);
 		depthPolygon[kinectPointsCtr] = polyPoint;
-		
+
+	   
 		kinectPointsCtr++;
 		
 
@@ -264,9 +301,9 @@ void ofApp::mousePressed(int x, int y, int button){
 
 		}
 
-		projPoints[projPointsCtr] = cvPoint(x, y);
+		projPoints[projPointsCtr].set(ofPoint(x, y));
 
-		cv::Point polyPoint((projPoints[projPointsCtr].x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].y - projOffset.y) / projScaleY);
+		cv::Point polyPoint((projPoints[projPointsCtr].get().x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].get().y - projOffset.y) / projScaleY);
 		
 		//GUI HERE
 		projPolygon[projPointsCtr] = polyPoint;
