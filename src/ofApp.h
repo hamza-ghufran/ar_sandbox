@@ -26,6 +26,7 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		
+		void PointTransfer(ofParameter <ofPoint> polygonFrom, ofParameter<ofPoint> polygonTo);
 
 
 		ofxKFW2::Device kinect;
@@ -37,6 +38,8 @@ class ofApp : public ofBaseApp{
 		
 		ofParameter <ofPoint> kinectPoints[4];
 		ofParameter<ofPoint> projPoints[4];
+
+		ofParameter <bool> Calibration;
 		
 
 		ofxPanel gui;
@@ -74,14 +77,12 @@ class ofApp : public ofBaseApp{
 		
 		cv::Point projOffset;
 
-
 		cv::Point depthPolygon[4];
 		cv::Point projPolygon[4];
 		
 		cv::vector<cv::Point2f > srcArray;
 		cv::vector<cv::Point2f > dstArray;
 
-		bool calibrated;
 		cv::Mat homographyMatrix;
 		
 
