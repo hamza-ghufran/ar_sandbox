@@ -28,14 +28,14 @@ public:
 
 	void update	(vector<Boid> &boids);
 
-    void seek(Vec2f target,float weight=1);
-    void avoid(Vec2f target,float weight=1);
+    void seek(Vec2f target,float weight=1,bool normalize =true);
+    void avoid(Vec2f target,float weight=1,bool normalize = true);
     void boundCheck(int padding);
 
     void flock(vector<Boid> &boids);
     bool isHit(int x,int y, int radius);
 
-	Vec2f steer(Vec2f target);
+	Vec2f steer(Vec2f target,bool normalize=true);
 
 	Vec2f separate(vector<Boid> &boids);
 	Vec2f align(vector<Boid> &boids);
