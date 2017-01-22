@@ -64,6 +64,15 @@
     <ClCompile Include="..\..\..\addons\ofxXmlSettings\libs\tinyxmlparser.cpp">
       <Filter>addons\ofxXmlSettings\libs</Filter>
     </ClCompile>
+    <ClCompile Include="src\Boid.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Flocking.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Simulation.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -715,6 +724,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\addons\ofxXmlSettings\libs\tinyxml.h">
       <Filter>addons\ofxXmlSettings\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Boid.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Flocking.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Simulation.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Vector.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -89,6 +89,76 @@ void ofApp::setup(){
 	}
 	
 
+	//Simulation Variables setup
+	mapRezSim = 3;
+	mapRezImg = 1;
+	maskPoints = 0;
+	fishCount = 100;
+	boundaryPadding = 10;
+	collisionWeight = 0;
+	startPosx = startPosy = 100;
+	endPosx = projectorWidth * projScaleX * mapRezSim * 0.8;
+	endPosy = projectorHeight * projScaleY * mapRezSim * 0.8;
+
+	//Simulation Gui Setup
+	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
+	simControls.setup("Simulation Controls", "simulation_settings.xml", 500, 0);
+	simControls.add(maxSpeed.set("Max Speed", 2, 0, 10));
+	simControls.add(maxForce.set("Max Force", 1, 0, 10));
+	simControls.add(destWeight.set("Goal Weight", 0.1, 0, 1));
+	simControls.add(flockSeparationWeight.set("Separation Weight", 1, 0, 2));
+	simControls.add(flockAlignmentWeight.set("Alignment Weight", 0.5, 0, 2));
+	simControls.add(flockCohesionWeight.set("Cohesion Weight", 0.25, 0, 2));
+	simControls.add(flockSeparationRadius.set("Separation Radius", 15, 0, 50));
+	simControls.add(flockAlignmentRadius.set("Alignment Radius", 20, 0, 50));
+	simControls.add(flockCohesionRadius.set("Cohesion Radius", 20, 0, 50));
+	simControls.add(startRadius.set("Start Radius", 50, 0, 200));
+	simControls.add(endRadius.set("End Radius", 50, 0, 200));
+	simControls.add(sleepTime.set("Sim Sleep Time", 0, 0, 0.1));
+	simControls.add(randSeed.set("Random Seed", 0, 0, 1));
+	simControls.add(boidScale.set("Boid Scale", 2, 0, 4));
+	simControls.loadFromFile("simulation_settings.xml");
+	//Simulation Gui Setup
+	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
+	destWeight.addListener(this, &ofApp::simParamChanged);
+	randSeed.addListener(this, &ofApp::simParamChanged);
+	sleepTime.addListener(this, &ofApp::simParamChanged);
+	maxSpeed.addListener(this, &ofApp::simParamChanged);
+	maxForce.addListener(this, &ofApp::simParamChanged);
+	flockSeparationWeight.addListener(this, &ofApp::simParamChanged);
+	flockAlignmentWeight.addListener(this, &ofApp::simParamChanged);
+	flockCohesionWeight.addListener(this, &ofApp::simParamChanged);
+	flockSeparationRadius.addListener(this, &ofApp::simParamChanged);
+	flockAlignmentRadius.addListener(this, &ofApp::simParamChanged);
+	flockCohesionRadius.addListener(this, &ofApp::simParamChanged);
+	startRadius.addListener(this, &ofApp::simParamStartRadiusChanged);
+	endRadius.addListener(this, &ofApp::simParamEndRadiusChanged);
+	//Simulation initializaion
+	sim.loadScene(startPosx, startPosy, endPosx, endPosy, projectorWidth * projScaleX * mapRezSim, projectorHeight * projScaleY * mapRezSim);
+	sim.init(
+		fishCount,//fish count
+		destWeight,//destination Weight
+		randSeed,//rand seed
+		sleepTime,//sleep time
+		boundaryPadding,//boundary padding
+		maxSpeed,//max speed
+		maxForce,//max force
+		flockSeparationWeight,//flock separation weight
+		flockAlignmentWeight,//flock alignment weight
+		flockCohesionWeight,//flock cohesion weight
+		collisionWeight,//collision weight
+		flockSeparationRadius,//flock separation radius
+		flockAlignmentRadius,//flock alignment radius
+		flockCohesionRadius,//flock cohesion radius
+		startRadius,//start position radius
+		endRadius                    //end position radius
+		);
+	//Simulation Handels to access data if needed
+	flockDisplay = sim.getFlockHandle();
+	boids = flockDisplay->getBoidsHandle();
+
+
+
 }
 
 //--------------------------------------------------------------
@@ -160,6 +230,49 @@ void ofApp::update() {
 	}
 	
 	
+	//Flocksing Simulation update
+	if (Calibration)
+	{
+		if (!sim.frame())
+		{
+			cout << "\nAdding new boids\n";
+			sim.addAllBoids();
+		}
+		for (int i = 0; i < boids->size(); i++)
+		{
+			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
+			float y = (*boids)[i].loc.y*mapRezImg / mapRezSim;
+
+
+			ofPoint boidPts[3];
+			float angle = (*boids)[i].orient / 180.0*PI;
+			ofColor randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
+
+			ofFill();
+			ofSetColor(randomCol);
+			ofSetPolyMode(OF_POLY_WINDING_ODD);
+			ofBeginShape();
+			for (int i = 0; i < 3; i++)
+			{
+				boidPts[i].x = trianglePts[i].x*cos(angle) - trianglePts[i].y*sin(angle) + x;
+				boidPts[i].y = trianglePts[i].y*cos(angle) + trianglePts[i].x*sin(angle) + y;
+				//boidPts[i] += cv::Point(x, y);
+				ofVertex(boidPts[i].x, boidPts[i].y);
+			}
+			ofEndShape();
+			ofSetHexColor(0xffffff);
+			
+
+			//cv::Scalar randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
+			//cv::fillConvexPoly(projectImgRGB, boidPts, 3, randomCol);
+
+		}
+		//Start
+		//cv::circle(projectImgRGB, cv::Point((startPosx / mapRezSim)*mapRezImg, (startPosy / mapRezSim)*mapRezImg), (startRadius / mapRezSim)*mapRezImg, blue, 1);
+		//Destination
+		//cv::circle(projectImgRGB, cv::Point((endPosx / mapRezSim)*mapRezImg, (endPosy / mapRezSim)*mapRezImg), (endRadius / mapRezSim)*mapRezImg, yellow, 1);
+
+	}//Sim update end
 }
 
 //--------------------------------------------------------------
@@ -168,6 +281,7 @@ void ofApp::draw(){
 	//Image diplayed
 	depthImgCV.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
 	gui.draw();
+	simControls.draw();
 
 	if (Calibration)
 	{
@@ -202,44 +316,58 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	
-	if (key == 'k')
+	switch (key)
 	{
+	case OF_KEY_ESC:
+		
+		break;
+	case 'k':
 		cout << "\n\n kinect points: \n";
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			cout << " " << kinectPoints[n];
 		}
 		cout << "\n polygon points: \n";
-		
+
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			cout << " " << depthPolygon[n];
 		}
 		cout << "\n";
-	}
+		break;
 
-	else if (key == 'c')
-	{
-        
+	case 'h':
+		
+		break;
+	case 'a':
+		cout << "\nAdding new boids\n";
+		sim.addAllBoids();
+		break;
+
+	case 'r':
+		cout << "\nRemove all boids\n";
+		sim.removeAllBoids();
+
+		break;
+
+	case 'c':
 		for (int n = 0; n <totalPolygonPoints; n++)
 		{
 			srcArray.push_back(depthPolygon[n]);
 			dstArray.push_back(projPolygon[n]);
 		}
 		Calibration = true;
-	}
 
-	else if (key == 'C')
-	{
+		break;
+
+	case 'C':
 		srcArray.clear();
 		dstArray.clear();
 		Calibration = false;
+
+		break;
 	}
 	
-	else if (key == 'd')
-	{
-		cout << "\n\tHomography : " << homographyMatrix << "\n";	
-	}
 }
 
 //--------------------------------------------------------------
@@ -260,43 +388,61 @@ void ofApp::mouseDragged(int x, int y, int button){
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
 	
-	if (button == OF_MOUSE_BUTTON_LEFT)
+	if (!Calibration)
 	{
-		if (kinectPointsCtr >= totalPolygonPoints)
+		if (button == OF_MOUSE_BUTTON_LEFT)
 		{
-			kinectPointsCtr = 0;
-		}
-		
-		//Points we get on the plane = mousex and mousey
-		kinectPoints[kinectPointsCtr].set(ofPoint(x, y));
-		
-		//mouse Points clicked minus Offset divided by scale= this gives us the exact point on the displayed image plane
-		cv::Point polyPoint((kinectPoints[kinectPointsCtr].get().x - depthOffset.x)/depthScale, (kinectPoints[kinectPointsCtr].get().y - depthOffset.y) / depthScale);
-		
-		//depthPolygon is an array of cvpoint type
-		depthPolygon[kinectPointsCtr] = polyPoint;
+			if (kinectPointsCtr >= totalPolygonPoints)
+			{
+				kinectPointsCtr = 0;
+			}
 
-		kinectPointsCtr++;
-	
+			//Points we get on the plane = mousex and mousey
+			kinectPoints[kinectPointsCtr].set(ofPoint(x, y));
+
+			//mouse Points clicked minus Offset divided by scale= this gives us the exact point on the displayed image plane
+			cv::Point polyPoint((kinectPoints[kinectPointsCtr].get().x - depthOffset.x) / depthScale, (kinectPoints[kinectPointsCtr].get().y - depthOffset.y) / depthScale);
+
+			//depthPolygon is an array of cvpoint type
+			depthPolygon[kinectPointsCtr] = polyPoint;
+
+			kinectPointsCtr++;
+
+		}
+
+		else if (button == OF_MOUSE_BUTTON_RIGHT)
+		{
+			if (projPointsCtr >= totalPolygonPoints)
+			{
+				projPointsCtr = 0;
+			}
+			//Points we get on the plane = mousex and mousey
+			projPoints[projPointsCtr].set(ofPoint(x, y));
+
+			//mouse Points clicked minus Offset divided by scale= this gives us the exact point on the displayed image plane
+			cv::Point polyPoint((projPoints[projPointsCtr].get().x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].get().y - projOffset.y) / projScaleY);
+
+			//projPolygon is an array of cvpoint type
+			projPolygon[projPointsCtr] = polyPoint;
+
+			projPointsCtr++;
+
+		}
 	}
-
-	else if (button == OF_MOUSE_BUTTON_RIGHT)
+	else
 	{
-		if (projPointsCtr >= totalPolygonPoints)
+		if (button == OF_MOUSE_BUTTON_LEFT)
 		{
-			projPointsCtr = 0;
+			startPosx = x-primaryScreenWidth;
+			startPosy = y;
+			sim.setStart(startPosx, startPosy);
 		}
-		//Points we get on the plane = mousex and mousey
-		projPoints[projPointsCtr].set(ofPoint(x, y));
-
-		//mouse Points clicked minus Offset divided by scale= this gives us the exact point on the displayed image plane
-		cv::Point polyPoint((projPoints[projPointsCtr].get().x - projOffset.x) / projScaleX, (projPoints[projPointsCtr].get().y - projOffset.y) / projScaleY);
-		
-		//projPolygon is an array of cvpoint type
-		projPolygon[projPointsCtr] = polyPoint;
-
-		projPointsCtr++;
-
+		else if (button == OF_MOUSE_BUTTON_RIGHT)
+		{
+			endPosx = x- primaryScreenWidth;
+			endPosy = y;
+			sim.setDestination(endPosx, endPosy);
+		}
 	}
 }
 
@@ -345,3 +491,37 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
 
+//Simulation Functions
+void ofApp::simParamChanged(float& val)
+{
+	sim.updateSimParams(
+		destWeight,//destination Weight
+		randSeed,//rand seed
+		sleepTime,//sleep time
+		boundaryPadding,//boundary padding
+		maxSpeed,//max speed
+		maxForce,//max force
+		flockSeparationWeight,//flock separation weight
+		flockAlignmentWeight,//flock alignment weight
+		flockCohesionWeight,//flock cohesion weight
+		collisionWeight,//collision weight
+		flockSeparationRadius,//flock separation radius
+		flockAlignmentRadius,//flock alignment radius
+		flockCohesionRadius,//flock cohesion radius
+		startRadius,//start position radius
+		endRadius); //end position radius);
+}
+void ofApp::simParamStartRadiusChanged(float& val)
+{
+	sim.setStart(startPosx, startPosy, startRadius);
+}
+void ofApp::simParamEndRadiusChanged(float& val)
+{
+	sim.setDestination(endPosx, endPosy, endRadius);
+}
+void ofApp::boidTriangleScaleChanged(float& val)
+{
+	trianglePts[0] = cv::Point(val*2.5 - val*0.5, 0);
+	trianglePts[1] = cv::Point(-val - val*0.5, -val);
+	trianglePts[2] = cv::Point(-val - val*0.5, val);
+}

@@ -5,7 +5,8 @@
 #include "ofxGui.h"
 #include "ofxOpenCv.h"
 
-
+//Simulation Header
+#include "Simulation.h"
 
 class ofApp : public ofBaseApp{
 
@@ -86,4 +87,42 @@ class ofApp : public ofBaseApp{
 		cv::Mat homographyMatrix;
 		
 
+		//Flocking Simulation Variables and Functions
+		void simParamChanged(float& val);
+		void simParamStartRadiusChanged(float& val);
+		void simParamEndRadiusChanged(float& val);
+		void boidTriangleScaleChanged(float& val);
+
+		float mapRezSim;
+		float mapRezImg;
+		int maskPoints;
+		int fishCount;
+		int boundaryPadding;
+		int collisionWeight;
+		int startPosx, startPosy;
+		int endPosx, endPosy;
+
+		Simulation sim;
+		Flocking* flockDisplay;
+		vector<Boid>* boids;
+		cv::Point trianglePts[3];
+
+		ofxPanel simControls;
+		ofxButton showContoursButton;
+		ofParameter<float> maxSpeed;
+		ofParameter<float> maxForce;
+		ofParameter<float> destWeight;
+		ofParameter<float> flockSeparationWeight;
+		ofParameter<float> flockAlignmentWeight;
+		ofParameter<float> flockCohesionWeight;
+		ofParameter<float> flockSeparationRadius;
+		ofParameter<float> flockAlignmentRadius;
+		ofParameter<float> flockCohesionRadius;
+		ofParameter<float> startRadius;
+		ofParameter<float> endRadius;
+		ofParameter<float> sleepTime;
+		ofParameter<float> randSeed;
+		ofParameter<float> boidScale;
+
+		
 };
