@@ -7,6 +7,7 @@
 
 //Simulation Header
 #include "Simulation.h"
+#include "TerrainInfluence.h"
 
 class ofApp : public ofBaseApp{
 
@@ -44,16 +45,17 @@ class ofApp : public ofBaseApp{
 		
 
 		ofxPanel gui;
+		void calibrationButton(bool& val);
 
 
-
-		ofImage depthImg;
-		ofxCvColorImage depthImgCV;
-		cv::Mat depthImgMat;
+		ofImage depthImg,depthNormalized;
+		ofxCvColorImage depthImgCV, depthNormalizedCV;
+		cv::Mat depthImgMat,depthNormalizedMat;
 		
 		//To process the image
 		cv::Mat processImg; 
-		ofxCvColorImage projectionImg;
+		ofxCvColorImage projectionImg, projectionNormalizedCV;
+		cv::Mat projectionNormalized;
 
 		//To Mask the projection
 		ofxCvColorImage maskImg;
@@ -86,12 +88,12 @@ class ofApp : public ofBaseApp{
 
 		cv::Mat homographyMatrix;
 		
-
 		//Flocking Simulation Variables and Functions
 		void simParamChanged(float& val);
 		void simParamStartRadiusChanged(float& val);
 		void simParamEndRadiusChanged(float& val);
 		void boidTriangleScaleChanged(float& val);
+		void terrainWeightChanged(float& val);
 
 		float mapRezSim;
 		float mapRezImg;
@@ -103,7 +105,7 @@ class ofApp : public ofBaseApp{
 		int endPosx, endPosy;
 
 		Simulation sim;
-		Flocking* flockDisplay;
+		Flocking* flock;
 		vector<Boid>* boids;
 		cv::Point trianglePts[3];
 
@@ -123,6 +125,7 @@ class ofApp : public ofBaseApp{
 		ofParameter<float> sleepTime;
 		ofParameter<float> randSeed;
 		ofParameter<float> boidScale;
+		ofParameter<float> terrainWeight;
 
-		
+		TerrainInfluence* terrain;
 };

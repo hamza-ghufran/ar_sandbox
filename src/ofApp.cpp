@@ -37,7 +37,7 @@ void ofApp::setup(){
 	
 	//True or False
 	gui.add(Calibration.set("Calibration", Calibration));
-
+	Calibration.addListener(this, &ofApp::calibrationButton);
     gui.loadFromFile("kinect_settings.xml");
 	
 	//Kinect Resources To use
@@ -60,14 +60,16 @@ void ofApp::setup(){
 
 	//depthImg is of OfImage type
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
+	depthNormalized.allocate(512, 424, OF_IMAGE_GRAYSCALE);
 
 	//depthImgCv is of ofxCvColorImage type
 	depthImgCV.allocate(512, 424);
-
+	depthNormalizedCV.allocate(512, 424);
 	//projectionImg is of ofxCvColorImage type
 	//Image projected by the Projector
 	projectionImg.allocate(projectorWidth, projectorHeight);
-    
+	projectionNormalizedCV.allocate(projectorWidth, projectorHeight);
+	
 	//
 	maskImg.allocate(projectorWidth, projectorHeight);
 	
@@ -75,9 +77,9 @@ void ofApp::setup(){
 	processImg = cv::Mat(projectionImg.getCvImage());
 	depthImgMat = cv::Mat(depthImgCV.getCvImage());
 	maskImgMat = cv::Mat(maskImg.getCvImage());
+	depthNormalizedMat = cv::Mat(depthNormalizedCV.getCvImage());
+	projectionNormalized = cv::Mat(projectionNormalizedCV.getCvImage());
 
-
-	
 	//Points already saved are passed onto the function to alot the x,y values to the KINECTPOLYGON and DEPTHPOLYGON
 	for (int j=0;j<totalPolygonPoints;j++)
 	{
@@ -88,6 +90,8 @@ void ofApp::setup(){
 		dstArray.push_back(projPolygon[j]);
 	}
 	
+	if(Calibration)
+	homographyMatrix = cv::findHomography(srcArray, dstArray);
 
 	//Simulation Variables setup
 	mapRezSim = 1;
@@ -117,6 +121,7 @@ void ofApp::setup(){
 	simControls.add(sleepTime.set("Sim Sleep Time", 0, 0, 0.1));
 	simControls.add(randSeed.set("Random Seed", 0, 0, 1));
 	simControls.add(boidScale.set("Boid Scale", 2, 0, 4));
+	simControls.add(terrainWeight.set("Terrain Weight", 1, 0, 3));
 	simControls.loadFromFile("simulation_settings.xml");
 	//Simulation Gui Setup
 	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
@@ -133,6 +138,7 @@ void ofApp::setup(){
 	flockCohesionRadius.addListener(this, &ofApp::simParamChanged);
 	startRadius.addListener(this, &ofApp::simParamStartRadiusChanged);
 	endRadius.addListener(this, &ofApp::simParamEndRadiusChanged);
+	terrainWeight.addListener(this, &ofApp::terrainWeightChanged);
 	//Simulation initializaion
 	sim.loadScene(startPosx, startPosy, endPosx, endPosy, projectorWidth * projScaleX * mapRezSim, projectorHeight * projScaleY * mapRezSim);
 	sim.init(
@@ -154,10 +160,10 @@ void ofApp::setup(){
 		endRadius                    //end position radius
 		);
 	//Simulation Handels to access data if needed
-	flockDisplay = sim.getFlockHandle();
-	boids = flockDisplay->getBoidsHandle();
+	flock = sim.getFlockHandle();
+	boids = flock->getBoidsHandle();
 
-
+	terrain = TerrainInfluence(projectorWidth,projectorHeight,flock,1);
 
 }
 
@@ -202,11 +208,13 @@ void ofApp::update() {
 				pixels.b = blue*255;
 
 				depthImg.setColor(x, y, pixels);
+				depthNormalized.setColor(x, y, ofColor(a*255));
 				
 			}
 		}
 		
 		depthImg.update();
+		depthNormalized.update();
 		
 	}
 
@@ -216,20 +224,24 @@ void ofApp::update() {
 	projectionImg.set(0);
 	//
 	maskImg.set(0);
-
-
+	
+	//Normalized depth image 0<--->255 range
+	depthNormalizedCV = depthNormalized;
+	
 	cv::fillConvexPoly(maskImgMat, projPolygon, totalPolygonPoints,cv::Scalar(255,255,255));
 	//cv::fillConvexPoly(depthImgMat, depthPolygon, totalPolygonPoints, cv::Scalar(0, 255, 0));
 	
 	if (Calibration)
 	{
-		homographyMatrix = cv::findHomography(srcArray,dstArray);
+		
 		cv::warpPerspective(depthImgMat, processImg, homographyMatrix, processImg.size());
 		cv::bitwise_and(processImg, maskImgMat, processImg);
 		
+		cv::warpPerspective(depthNormalizedMat, projectionNormalized, homographyMatrix, projectionNormalized.size());
 	}
 	
-	
+	terrain->updateDepthImage(projectionNormalized);
+
 	
 }
 
@@ -491,6 +503,30 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
 
+void ofApp::calibrationButton(bool& val)
+{
+	if (Calibration)
+	{
+		for (int n = 0; n < totalPolygonPoints; n++)
+		{
+			srcArray.push_back(depthPolygon[n]);
+			dstArray.push_back(projPolygon[n]);
+		}
+		homographyMatrix = cv::findHomography(srcArray, dstArray);
+	}
+
+	else
+	{
+		
+		srcArray.clear();
+		dstArray.clear();
+		
+	}
+
+}
+
+
+
 //Simulation Functions
 void ofApp::simParamChanged(float& val)
 {
@@ -524,4 +560,8 @@ void ofApp::boidTriangleScaleChanged(float& val)
 	trianglePts[0] = cv::Point(val*2.5 - val*0.5, 0);
 	trianglePts[1] = cv::Point(-val - val*0.5, -val);
 	trianglePts[2] = cv::Point(-val - val*0.5, val);
+}
+void ofApp::terrainWeightChanged(float& val)
+{
+	terrain.updateWeight(terrainWeight);
 }
