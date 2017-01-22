@@ -47,9 +47,9 @@ void ofApp::setup(){
 	ofSetWindowShape(window_width, window_height);
 
 	//Kinect Depth image Adjust
-	depthOffset.x = 400;
-	depthOffset.y = 230;
-	depthScale = 1;
+	depthOffset.x = 500;
+	depthOffset.y = 0;
+	depthScale = 1.5;
 
     //Projector Display Adjust
 	projOffset.x = 1366;
@@ -90,10 +90,10 @@ void ofApp::setup(){
 	
 
 	//Simulation Variables setup
-	mapRezSim = 3;
+	mapRezSim = 1;
 	mapRezImg = 1;
 	maskPoints = 0;
-	fishCount = 100;
+	fishCount = 15;
 	boundaryPadding = 10;
 	collisionWeight = 0;
 	startPosx = startPosy = 100;
@@ -102,7 +102,7 @@ void ofApp::setup(){
 
 	//Simulation Gui Setup
 	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
-	simControls.setup("Simulation Controls", "simulation_settings.xml", 500, 0);
+	simControls.setup("Simulation Controls", "simulation_settings.xml", 250, 10);
 	simControls.add(maxSpeed.set("Max Speed", 2, 0, 10));
 	simControls.add(maxForce.set("Max Force", 1, 0, 10));
 	simControls.add(destWeight.set("Goal Weight", 0.1, 0, 1));
@@ -230,49 +230,7 @@ void ofApp::update() {
 	}
 	
 	
-	//Flocksing Simulation update
-	if (Calibration)
-	{
-		if (!sim.frame())
-		{
-			cout << "\nAdding new boids\n";
-			sim.addAllBoids();
-		}
-		for (int i = 0; i < boids->size(); i++)
-		{
-			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
-			float y = (*boids)[i].loc.y*mapRezImg / mapRezSim;
-
-
-			ofPoint boidPts[3];
-			float angle = (*boids)[i].orient / 180.0*PI;
-			ofColor randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
-
-			ofFill();
-			ofSetColor(randomCol);
-			ofSetPolyMode(OF_POLY_WINDING_ODD);
-			ofBeginShape();
-			for (int i = 0; i < 3; i++)
-			{
-				boidPts[i].x = trianglePts[i].x*cos(angle) - trianglePts[i].y*sin(angle) + x;
-				boidPts[i].y = trianglePts[i].y*cos(angle) + trianglePts[i].x*sin(angle) + y;
-				//boidPts[i] += cv::Point(x, y);
-				ofVertex(boidPts[i].x, boidPts[i].y);
-			}
-			ofEndShape();
-			ofSetHexColor(0xffffff);
-			
-
-			//cv::Scalar randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
-			//cv::fillConvexPoly(projectImgRGB, boidPts, 3, randomCol);
-
-		}
-		//Start
-		//cv::circle(projectImgRGB, cv::Point((startPosx / mapRezSim)*mapRezImg, (startPosy / mapRezSim)*mapRezImg), (startRadius / mapRezSim)*mapRezImg, blue, 1);
-		//Destination
-		//cv::circle(projectImgRGB, cv::Point((endPosx / mapRezSim)*mapRezImg, (endPosy / mapRezSim)*mapRezImg), (endRadius / mapRezSim)*mapRezImg, yellow, 1);
-
-	}//Sim update end
+	
 }
 
 //--------------------------------------------------------------
@@ -308,7 +266,49 @@ void ofApp::draw(){
 	}
 	    
 	
+	//Flocksing Simulation update
+	if (Calibration)
+	{
+		if (!sim.frame())
+		{
+			cout << "\nAdding new boids\n";
+			sim.addAllBoids();
+		}
+		for (int i = 0; i < boids->size(); i++)
+		{
+			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
+			float y = (*boids)[i].loc.y*mapRezImg / mapRezSim;
 
+
+			ofPoint boidPts[3];
+			float angle = (*boids)[i].orient / 180.0*PI;
+			ofColor randomCol(randomRange(100, 255, (*boids)[i].id * 123), randomRange(100, 255, (*boids)[i].id * 157), randomRange(100, 255, (*boids)[i].id * 921));
+
+			ofFill();
+			ofSetColor(randomCol);
+			ofSetPolyMode(OF_POLY_WINDING_ODD);
+			ofBeginShape();
+			for (int i = 0; i < 3; i++)
+			{
+				boidPts[i].x = trianglePts[i].x*cos(angle) - trianglePts[i].y*sin(angle) + x;
+				boidPts[i].y = trianglePts[i].y*cos(angle) + trianglePts[i].x*sin(angle) + y;
+				//boidPts[i] += cv::Point(x, y);
+				ofVertex(boidPts[i].x/*+primaryScreenWidth*/, boidPts[i].y);
+			}
+			ofEndShape();
+			ofSetHexColor(0xffffff);
+
+
+			//cv::Scalar randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
+			//cv::fillConvexPoly(projectImgRGB, boidPts, 3, randomCol);
+
+		}
+		//Start
+		//cv::circle(projectImgRGB, cv::Point((startPosx / mapRezSim)*mapRezImg, (startPosy / mapRezSim)*mapRezImg), (startRadius / mapRezSim)*mapRezImg, blue, 1);
+		//Destination
+		//cv::circle(projectImgRGB, cv::Point((endPosx / mapRezSim)*mapRezImg, (endPosy / mapRezSim)*mapRezImg), (endRadius / mapRezSim)*mapRezImg, yellow, 1);
+
+	}//Sim update end
 	
 
 }
