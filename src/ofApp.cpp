@@ -163,7 +163,7 @@ void ofApp::setup(){
 	flock = sim.getFlockHandle();
 	boids = flock->getBoidsHandle();
 
-	terrain = TerrainInfluence(projectorWidth,projectorHeight,flock,1);
+	terrain = new TerrainInfluence(projectorWidth,projectorHeight,flock,terrainWeight.get(),1);
 
 }
 
@@ -286,6 +286,8 @@ void ofApp::draw(){
 			cout << "\nAdding new boids\n";
 			sim.addAllBoids();
 		}
+
+		terrain->updateBoids();
 		for (int i = 0; i < boids->size(); i++)
 		{
 			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
@@ -563,5 +565,5 @@ void ofApp::boidTriangleScaleChanged(float& val)
 }
 void ofApp::terrainWeightChanged(float& val)
 {
-	terrain.updateWeight(terrainWeight);
+	terrain->updateWeight(terrainWeight);
 }

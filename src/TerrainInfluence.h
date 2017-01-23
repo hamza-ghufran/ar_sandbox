@@ -12,7 +12,7 @@ class TerrainInfluence
 	vector<Boid>* boids;
 	float weight;
 public:
-	TerrainInfluence(int _rows,int _columns,Flocking* _handle,int _weight, int _padding);
+	TerrainInfluence(int _rows,int _columns,Flocking* _handle,float _weight=1, int _padding=1);
 	void updateDepthImage(cv::Mat& depthImage);
 	void updateBoids();
 	void updateWeight(float _weight);

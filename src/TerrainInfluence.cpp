@@ -1,6 +1,6 @@
 #include "TerrainInfluence.h"
 
-TerrainInfluence::TerrainInfluence(int _rows, int _columns, Flocking* _handle, int _weight = 1, int _padding = 1)
+TerrainInfluence::TerrainInfluence(int _rows, int _columns, Flocking* _handle, float _weight , int _padding)
 {
 	padding = _padding;
 	rows = _rows;
@@ -56,7 +56,7 @@ void TerrainInfluence::updateBoids()
 	}
 }
 
-void TerrainInfluence::updateWight(float _weight)
+void TerrainInfluence::updateWeight(float _weight)
 {
 	weight = _weight;
 }

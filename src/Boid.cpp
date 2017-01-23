@@ -53,11 +53,11 @@ void Boid::update(vector<Boid> &boids) {
 
 }
 
-void Boid::seek(Vec2f target,float weight,bool normalize=true) {
+void Boid::seek(Vec2f target,float weight,bool normalize) {
     acc += steer(target,normalize)*weight;
 }
 
-void Boid::avoid(Vec2f target,float weight,bool normalize=true) {
+void Boid::avoid(Vec2f target,float weight,bool normalize) {
     acc -= steer(target,normalize)*weight;
 }
 
@@ -93,7 +93,7 @@ void Boid::boundCheck(int padding) {
 
 
 // A method that calculates a steering vector towards a target
-Vec2f Boid::steer(Vec2f target,bool normalize=true) {
+Vec2f Boid::steer(Vec2f target,bool normalize) {
     Vec2f steer;  // The steering vector
     Vec2f desired = target - loc;  // A vector pointing from the location to the target
 

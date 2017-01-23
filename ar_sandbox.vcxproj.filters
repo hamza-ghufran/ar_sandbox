@@ -73,7 +73,7 @@
     <ClCompile Include="src\Simulation.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="TerrainInfluence.cpp">
+    <ClCompile Include="src\TerrainInfluence.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -740,7 +740,7 @@
     <ClInclude Include="src\Vector.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="TerrainInfluence.h">
+    <ClInclude Include="src\TerrainInfluence.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
