@@ -69,7 +69,7 @@ void ofApp::setup(){
 	//Image projected by the Projector
 	projectionImg.allocate(projectorWidth, projectorHeight);
 	projectionNormalizedCV.allocate(projectorWidth, projectorHeight);
-	
+	projectionNormalizedCV.set(0, 0, 0);
 	//
 	maskImg.allocate(projectorWidth, projectorHeight);
 	
@@ -115,7 +115,7 @@ void ofApp::setup(){
 	simControls.add(flockCohesionWeight.set("Cohesion Weight", 0.25, 0, 2));
 	simControls.add(flockSeparationRadius.set("Separation Radius", 15, 0, 50));
 	simControls.add(flockAlignmentRadius.set("Alignment Radius", 20, 0, 50));
-	simControls.add(flockCohesionRadius.set("Cohesion Radius", 20, 0, 50));
+	simControls.add(flockCohesionRadius.set("Cohesion Radius", 30, 0, 50));
 	simControls.add(startRadius.set("Start Radius", 50, 0, 200));
 	simControls.add(endRadius.set("End Radius", 50, 0, 200));
 	simControls.add(sleepTime.set("Sim Sleep Time", 0, 0, 0.1));
@@ -238,9 +238,11 @@ void ofApp::update() {
 		cv::bitwise_and(processImg, maskImgMat, processImg);
 		
 		cv::warpPerspective(depthNormalizedMat, projectionNormalized, homographyMatrix, projectionNormalized.size());
+
+		terrain.updateDepthImage(projectionNormalized);
 	}
 	
-	terrain.updateDepthImage(projectionNormalized);
+	
 
 	
 }

@@ -12,7 +12,7 @@ void TerrainInfluence::init(int _rows, int _columns, Flocking* _handle, float _w
 	weight = _weight;
 
 	partialDerivative.create(rows, columns, CV_8UC2);
-	partialDerivative.setTo(cv::Scalar(0));
+	partialDerivative.setTo(cv::Scalar(0,0));
 
 }
 
