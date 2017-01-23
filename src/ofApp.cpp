@@ -163,7 +163,7 @@ void ofApp::setup(){
 	flock = sim.getFlockHandle();
 	boids = flock->getBoidsHandle();
 
-	terrain = new TerrainInfluence(projectorWidth,projectorHeight,flock,terrainWeight.get(),1);
+	terrain.init(projectorWidth,projectorHeight,flock,terrainWeight.get(),1);
 
 }
 
@@ -240,7 +240,7 @@ void ofApp::update() {
 		cv::warpPerspective(depthNormalizedMat, projectionNormalized, homographyMatrix, projectionNormalized.size());
 	}
 	
-	terrain->updateDepthImage(projectionNormalized);
+	terrain.updateDepthImage(projectionNormalized);
 
 	
 }
@@ -287,7 +287,7 @@ void ofApp::draw(){
 			sim.addAllBoids();
 		}
 
-		terrain->updateBoids();
+		terrain.updateBoids();
 		for (int i = 0; i < boids->size(); i++)
 		{
 			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
@@ -565,5 +565,5 @@ void ofApp::boidTriangleScaleChanged(float& val)
 }
 void ofApp::terrainWeightChanged(float& val)
 {
-	terrain->updateWeight(terrainWeight);
+	terrain.updateWeight(terrainWeight.get());
 }

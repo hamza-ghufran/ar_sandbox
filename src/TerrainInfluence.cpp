@@ -1,6 +1,8 @@
 #include "TerrainInfluence.h"
 
-TerrainInfluence::TerrainInfluence(int _rows, int _columns, Flocking* _handle, float _weight , int _padding)
+
+
+void TerrainInfluence::init(int _rows, int _columns, Flocking* _handle, float _weight, int _padding)
 {
 	padding = _padding;
 	rows = _rows;
@@ -11,7 +13,7 @@ TerrainInfluence::TerrainInfluence(int _rows, int _columns, Flocking* _handle, f
 
 	partialDerivative.create(rows, columns, CV_8UC2);
 	partialDerivative.setTo(cv::Scalar(0));
-	
+
 }
 
 void TerrainInfluence::updateDepthImage(cv::Mat& depthImage)

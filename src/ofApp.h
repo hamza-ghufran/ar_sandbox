@@ -127,5 +127,5 @@ class ofApp : public ofBaseApp{
 		ofParameter<float> boidScale;
 		ofParameter<float> terrainWeight;
 
-		TerrainInfluence* terrain;
+		TerrainInfluence terrain;
 };

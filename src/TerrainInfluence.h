@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Simulation.h"
-#include "Vector.h"
+#include "Flocking.h"
 #include "ofxOpenCv.h"
 
 class TerrainInfluence
@@ -11,8 +10,10 @@ class TerrainInfluence
 	Flocking* flock;
 	vector<Boid>* boids;
 	float weight;
+
 public:
-	TerrainInfluence(int _rows,int _columns,Flocking* _handle,float _weight=1, int _padding=1);
+	TerrainInfluence();
+	void init(int _rows, int _columns, Flocking* _handle, float _weight = 1, int _padding = 1);
 	void updateDepthImage(cv::Mat& depthImage);
 	void updateBoids();
 	void updateWeight(float _weight);
