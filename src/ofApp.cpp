@@ -2,14 +2,23 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	
+	//ofSetBackgroundColorHex(0x000000);
 
-	primaryScreenWidth = 1366;
-	projectorWidth = 1920.0 *0.125;
-	projectorHeight = 1080.0 * 0.125;
+	//Hamza's Laptop
+	//primaryScreenWidth = 1366;
+	//projectorWidth = 1920.0 *0.125;
+	//projectorHeight = 1080.0 * 0.125;
 
-	projScaleX = 8;
-	projScaleY = 8;
+	//Usama's PC
+	primaryScreenWidth = 1920;
+	projectorWidth = 1680.0 *0.25;		//I'm using a VGA Cable for the projector, not HDMI so not Full HD
+	projectorHeight = 1050.0 * 0.25;	//I'm using a VGA Cable for the projector, not HDMI so not Full HD
+	
 
+	projScaleX = 4;
+	projScaleY = 4;
+	totalPolygonPoints = 4;
 
 	window_width = projectorWidth*projScaleX + primaryScreenWidth;
 	window_height = projectorHeight*projScaleY;
@@ -20,8 +29,8 @@ void ofApp::setup(){
 	gui.setup("Controls","kinect_settings.xml");
 	
 	//Spectrum Adjust
-	gui.add(minthreshold.setup("MINTHRESHOLD", 600, 0, 4500));
-	gui.add(maxthreshold.setup("MAXTHRESHOLD",1200, 0, 4500));
+	gui.add(minthreshold.setup("MINTHRESHOLD", 855, 800, 1000));
+	gui.add(maxthreshold.setup("MAXTHRESHOLD",1000, 800, 1000));
 	
 	//Points selected on the Depth Image- RGB Scale.
 	gui.add(kinectPoints[0].set("DEPTH FIRST", ofPoint(0, 0)));
@@ -37,8 +46,8 @@ void ofApp::setup(){
 	
 	//True or False
 	gui.add(Calibration.set("Calibration", Calibration));
+	gui.loadFromFile("kinect_settings.xml");
 	Calibration.addListener(this, &ofApp::calibrationButton);
-    gui.loadFromFile("kinect_settings.xml");
 	
 	//Kinect Resources To use
 	kinect.open();
@@ -52,31 +61,32 @@ void ofApp::setup(){
 	depthScale = 1.5;
 
     //Projector Display Adjust
-	projOffset.x = 1366;
+	projOffset.x = primaryScreenWidth;
 	projOffset.y = 0;
-
-	
-	totalPolygonPoints = 4;
 
 	//depthImg is of OfImage type
 	depthImg.allocate(512, 424, OF_IMAGE_COLOR);
-	depthNormalized.allocate(512, 424, OF_IMAGE_GRAYSCALE);
+	depthNormalized.allocate(512, 424, OF_IMAGE_COLOR);//OF_IMAGE_GRAYSCALE
 
 	//depthImgCv is of ofxCvColorImage type
 	depthImgCV.allocate(512, 424);
 	depthNormalizedCV.allocate(512, 424);
-	//projectionImg is of ofxCvColorImage type
+	//depthNormalizedCV.set(0, 0, 0);
+
 	//Image projected by the Projector
+	//projectionImg is of ofxCvColorImage type
 	projectionImg.allocate(projectorWidth, projectorHeight);
 	projectionNormalizedCV.allocate(projectorWidth, projectorHeight);
-	projectionNormalizedCV.set(0, 0, 0);
+	//projectionNormalizedCV.set(0, 0, 0);
 	//
 	maskImg.allocate(projectorWidth, projectorHeight);
-	
+	maskImgNormalized.allocate(projectorWidth, projectorHeight);
+
 	//Mat Type
 	processImg = cv::Mat(projectionImg.getCvImage());
 	depthImgMat = cv::Mat(depthImgCV.getCvImage());
 	maskImgMat = cv::Mat(maskImg.getCvImage());
+	maskImgNormalizedMat = cv::Mat(maskImgNormalized.getCvImage());
 	depthNormalizedMat = cv::Mat(depthNormalizedCV.getCvImage());
 	projectionNormalized = cv::Mat(projectionNormalizedCV.getCvImage());
 
@@ -90,19 +100,19 @@ void ofApp::setup(){
 		dstArray.push_back(projPolygon[j]);
 	}
 	
-	if(Calibration)
-	homographyMatrix = cv::findHomography(srcArray, dstArray);
+	if (Calibration)
+		homographyMatrix = cv::findHomography(srcArray, dstArray);
 
 	//Simulation Variables setup
-	mapRezSim = 1;
+	mapRezSim = 5;
 	mapRezImg = 1;
 	maskPoints = 0;
 	fishCount = 15;
 	boundaryPadding = 10;
 	collisionWeight = 0;
-	startPosx = startPosy = 100;
-	endPosx = projectorWidth * projScaleX * mapRezSim * 0.8;
-	endPosy = projectorHeight * projScaleY * mapRezSim * 0.8;
+	startPosx = startPosy = projectorWidth * 0.5;
+	endPosx = projectorWidth * mapRezSim ;
+	endPosy = projectorHeight * mapRezSim ;
 
 	//Simulation Gui Setup
 	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
@@ -121,7 +131,9 @@ void ofApp::setup(){
 	simControls.add(sleepTime.set("Sim Sleep Time", 0, 0, 0.1));
 	simControls.add(randSeed.set("Random Seed", 0, 0, 1));
 	simControls.add(boidScale.set("Boid Scale", 2, 0, 4));
-	simControls.add(terrainWeight.set("Terrain Weight", 1, 0, 3));
+	simControls.add(terrainWeight.set("Terrain Weight", 0.2, 0, 2));
+	simControls.add(terrainDeltaHeight.set("Ter Hgt Del", 30, 5, 100));
+	simControls.add(terrainEdgePadding.set("Ter Padding", 5, 1, 50));
 	simControls.loadFromFile("simulation_settings.xml");
 	//Simulation Gui Setup
 	boidScale.addListener(this, &ofApp::boidTriangleScaleChanged);
@@ -139,8 +151,10 @@ void ofApp::setup(){
 	startRadius.addListener(this, &ofApp::simParamStartRadiusChanged);
 	endRadius.addListener(this, &ofApp::simParamEndRadiusChanged);
 	terrainWeight.addListener(this, &ofApp::terrainWeightChanged);
+	terrainDeltaHeight.addListener(this, &ofApp::terrainDeltaHeightChanged);
+	terrainEdgePadding.addListener(this, &ofApp::terrainEdgePaddingChanged);
 	//Simulation initializaion
-	sim.loadScene(startPosx, startPosy, endPosx, endPosy, projectorWidth * projScaleX * mapRezSim, projectorHeight * projScaleY * mapRezSim);
+	sim.loadScene(startPosx, startPosy, endPosx, endPosy, projectorWidth * mapRezSim, projectorHeight * mapRezSim);
 	sim.init(
 		fishCount,//fish count
 		destWeight,//destination Weight
@@ -163,7 +177,7 @@ void ofApp::setup(){
 	flock = sim.getFlockHandle();
 	boids = flock->getBoidsHandle();
 
-	terrain.init(projectorWidth,projectorHeight,flock,terrainWeight.get(),1);
+	terrain.init(projectorHeight, projectorWidth,flock,terrainWeight.get(),terrainEdgePadding, terrainDeltaHeight,mapRezImg,mapRezSim);
 
 }
 
@@ -192,14 +206,14 @@ void ofApp::update() {
 				ofColor pixels;
 				//Spectrum Formation
 				float red = 0,blue = 0,green = 0;
-				if (a > 0 && a < 0.5) {
+				if (a < 0.5) {//a > 0 && 
 					 red = ofMap(a, 0, 0.5, 1, 0, true);
-					 green = ofMap(a, 0, 0.5, 0,1, true);
-					 blue = 0;
+					 green = ofMap(a, 0, 0.5, 1,1, true);
+					 blue = ofMap(a, 0, 0.5, 0, 0, true);;
 				}
-				else if (a>=0.5 && a<1){
-					 red = 0;
-					 green = ofMap(a, 0.5, 1, 1, 0, true);
+				else if (a>=0.5 ){//&& a<1
+					 red = ofMap(a, 0.5, 1, 0.2, 0, true);
+					 green = ofMap(a, 0.5, 1, 1, 0.1, true);
 					 blue = ofMap(a, 0.5, 1, 0, 1, true);
 				}
 				//GUI HERE
@@ -208,7 +222,9 @@ void ofApp::update() {
 				pixels.b = blue*255;
 
 				depthImg.setColor(x, y, pixels);
-				depthNormalized.setColor(x, y, ofColor(a*255));
+				//depthImg.setColor(x, y, ofColor(0, 0, 0));
+
+				depthNormalized.setColor(x, y, ofColor(a*255, 0,0));
 				
 			}
 		}
@@ -222,8 +238,10 @@ void ofApp::update() {
 	depthImgCV = depthImg;
 	//Background of Projector 0
 	projectionImg.set(0);
+	projectionNormalizedCV.set(0);
 	//
 	maskImg.set(0);
+	maskImgNormalized.set(0,255,0);
 	
 	//Normalized depth image 0<--->255 range
 	depthNormalizedCV = depthNormalized;
@@ -231,6 +249,10 @@ void ofApp::update() {
 	cv::fillConvexPoly(maskImgMat, projPolygon, totalPolygonPoints,cv::Scalar(255,255,255));
 	//cv::fillConvexPoly(depthImgMat, depthPolygon, totalPolygonPoints, cv::Scalar(0, 255, 0));
 	
+	cv::fillConvexPoly(maskImgNormalizedMat, projPolygon, totalPolygonPoints, cv::Scalar(0, 0,0));
+
+
+	//Warp Transform the depth map to projection
 	if (Calibration)
 	{
 		
@@ -238,85 +260,57 @@ void ofApp::update() {
 		cv::bitwise_and(processImg, maskImgMat, processImg);
 		
 		cv::warpPerspective(depthNormalizedMat, projectionNormalized, homographyMatrix, projectionNormalized.size());
+		cv::bitwise_or(projectionNormalized, maskImgNormalizedMat, projectionNormalized);
 
-		terrain.updateDepthImage(projectionNormalized);
 	}
-	
-	
-
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-	
-	//Image diplayed
-	depthImgCV.draw(depthOffset.x,depthOffset.y,depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
-	gui.draw();
-	simControls.draw();
-
-	if (Calibration)
-	{
-		projectionImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
-	}
-	else
-	{
-		maskImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
-
-		for (int n = 0; n < totalPolygonPoints; n++)
-		{
-			//Points plotted displayed as Circle 
-			ofSetColor(ofColor(0, 255, 0));
-			ofDrawCircle(kinectPoints[n].get().x, kinectPoints[n].get().y, 3);
-			ofDrawBitmapString(ofToString(n), kinectPoints[n].get().x, kinectPoints[n].get().y);
-			
-			//Points plotted displayed as Circle 
-			ofSetColor(ofColor(255, 0, 0));
-			ofDrawCircle(projPoints[n].get().x, projPoints[n].get().y, 3);
-			ofDrawBitmapString(ofToString(n), projPoints[n].get().x, projPoints[n].get().y);
-		}
-
-		ofSetColor(ofColor(255, 255, 255));
-	}
-	    
 	
 	//Flocksing Simulation update
 	if (Calibration)
 	{
+		terrain.updateDepthImage(projectionNormalized);
+		terrain.updateBoids();
+
+
 		if (!sim.frame())
 		{
 			cout << "\nAdding new boids\n";
 			sim.addAllBoids();
 		}
+		
 
-		terrain.updateBoids();
 		for (int i = 0; i < boids->size(); i++)
 		{
 			float x = (*boids)[i].loc.x*mapRezImg / mapRezSim;
 			float y = (*boids)[i].loc.y*mapRezImg / mapRezSim;
-
-
-			ofPoint boidPts[3];
 			float angle = (*boids)[i].orient / 180.0*PI;
-			ofColor randomCol(randomRange(100, 255, (*boids)[i].id * 123), randomRange(100, 255, (*boids)[i].id * 157), randomRange(100, 255, (*boids)[i].id * 921));
 
+			//OpenCV data structures
+			cv::Point boidPts[3];
+			cv::Scalar randomCol(randomRange(100, 255, (*boids)[i].id * 123), randomRange(100, 255, (*boids)[i].id * 157), randomRange(100, 255, (*boids)[i].id * 921));
+			
+			
+			//OpenGL Draw over the image, onto the window. - NEEDS TO BE IN THE DRAW FUNCTION. (NOT IN UPDATE)
+			/*
+			ofPoint boidPts[3];
+			ofColor randomCol(randomRange(100, 255, (*boids)[i].id * 123), randomRange(100, 255, (*boids)[i].id * 157), randomRange(100, 255, (*boids)[i].id * 921));
 			ofFill();
 			ofSetColor(randomCol);
 			ofSetPolyMode(OF_POLY_WINDING_ODD);
 			ofBeginShape();
+			*/
 			for (int i = 0; i < 3; i++)
 			{
 				boidPts[i].x = trianglePts[i].x*cos(angle) - trianglePts[i].y*sin(angle) + x;
 				boidPts[i].y = trianglePts[i].y*cos(angle) + trianglePts[i].x*sin(angle) + y;
-				//boidPts[i] += cv::Point(x, y);
-				ofVertex(boidPts[i].x/*+primaryScreenWidth*/, boidPts[i].y);
+
+				//ofVertex(boidPts[i].x/*+primaryScreenWidth*/, boidPts[i].y);
 			}
+			/*
 			ofEndShape();
 			ofSetHexColor(0xffffff);
+			*/
 
-
-			//cv::Scalar randomCol(randomRange(50, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
-			//cv::fillConvexPoly(projectImgRGB, boidPts, 3, randomCol);
+			cv::fillConvexPoly(processImg, boidPts, 3, randomCol);
 
 		}
 		//Start
@@ -325,6 +319,75 @@ void ofApp::draw(){
 		//cv::circle(projectImgRGB, cv::Point((endPosx / mapRezSim)*mapRezImg, (endPosy / mapRezSim)*mapRezImg), (endRadius / mapRezSim)*mapRezImg, yellow, 1);
 
 	}//Sim update end
+
+	
+}
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+	
+	//UI controls 
+	gui.draw();
+	simControls.draw();
+
+	if (Calibration)
+	{
+		//Main Screen
+		projectionImg.draw(depthOffset.x, depthOffset.y, projectorWidth * projScaleX *0.5 , projectorHeight * projScaleY * 0.5);
+		//projectionNormalizedCV.draw(depthOffset.x, depthOffset.y, projectorWidth * projScaleX *0.5, projectorHeight * projScaleY * 0.5);
+		//maskImgNormalized.draw(depthOffset.x, depthOffset.y, projectorWidth * projScaleX *0.5, projectorHeight * projScaleY * 0.5);
+		/*
+		ofxCvColorImage pD;
+		pD.allocate(projectorWidth, projectorHeight);
+		cv::Mat pDMat = cv::Mat(pD.getCvImage());
+		//pD.set(0);
+		partialDerivatives = terrain.getPartialDerivatives();
+		
+		for (int i = 0; i < pDMat.rows ; i++)
+		{
+			cv::Vec3b* val = pDMat.ptr<cv::Vec3b>(i);
+			cv::Vec3b* derivative = partialDerivatives->ptr<cv::Vec3b>(i);
+			
+			for (int j = 0; j < pDMat.cols ; j++)
+			{
+				val[j][0] = derivative[j][0];
+				val[j][1] = derivative[j][1];
+				val[j][2] = derivative[j][2];
+				
+			}
+
+		}
+		pD.draw(depthOffset.x, depthOffset.y+ projectorHeight * projScaleY * 0.5, projectorWidth * projScaleX *0.5, projectorHeight * projScaleY * 0.5);
+		*/
+
+		//Projector Screen
+		projectionImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
+	}
+	else
+	{
+		//Main Screen
+		depthImgCV.draw(depthOffset.x, depthOffset.y, depthImg.getWidth()*depthScale, depthImg.getHeight()*depthScale);
+		//Projector Screen
+		maskImg.draw(projOffset.x, projOffset.y, projectorWidth * projScaleX, projectorHeight * projScaleY);
+
+		for (int n = 0; n < totalPolygonPoints; n++)
+		{
+			//Points plotted displayed as Circle 
+			ofSetColor(ofColor(255,255, 255));
+			ofDrawCircle(kinectPoints[n].get().x, kinectPoints[n].get().y, 3);
+			ofDrawBitmapString(ofToString(n), kinectPoints[n].get().x, kinectPoints[n].get().y);
+			
+			//Points plotted displayed as Circle 
+			ofSetColor(ofColor(0, 255, 255));
+			ofDrawCircle(projPoints[n].get().x, projPoints[n].get().y, 3);
+			ofDrawBitmapString(ofToString(n), projPoints[n].get().x, projPoints[n].get().y);
+		}
+
+		ofSetColor(ofColor(255, 255, 255));
+	}
+	    
+	
+	
 	
 
 }
@@ -568,4 +631,14 @@ void ofApp::boidTriangleScaleChanged(float& val)
 void ofApp::terrainWeightChanged(float& val)
 {
 	terrain.updateWeight(terrainWeight.get());
+}
+
+void ofApp::terrainDeltaHeightChanged(int & val)
+{
+	terrain.updateDeltaHeight(terrainDeltaHeight.get());
+}
+
+void ofApp::terrainEdgePaddingChanged(int & val)
+{
+	terrain.updatePadding(terrainEdgePadding.get());
 }

@@ -60,6 +60,8 @@ class ofApp : public ofBaseApp{
 		//To Mask the projection
 		ofxCvColorImage maskImg;
 		cv::Mat maskImgMat;
+		ofxCvColorImage maskImgNormalized;
+		cv::Mat maskImgNormalizedMat;
 		
 		int primaryScreenWidth;
 		int window_width; 
@@ -94,6 +96,8 @@ class ofApp : public ofBaseApp{
 		void simParamEndRadiusChanged(float& val);
 		void boidTriangleScaleChanged(float& val);
 		void terrainWeightChanged(float& val);
+		void terrainDeltaHeightChanged(int& val);
+		void terrainEdgePaddingChanged(int& val);
 
 		float mapRezSim;
 		float mapRezImg;
@@ -126,6 +130,9 @@ class ofApp : public ofBaseApp{
 		ofParameter<float> randSeed;
 		ofParameter<float> boidScale;
 		ofParameter<float> terrainWeight;
+		ofParameter<int>	terrainDeltaHeight;
+		ofParameter<int>	terrainEdgePadding;
 
 		TerrainInfluence terrain;
+		cv::Mat* partialDerivatives;
 };
