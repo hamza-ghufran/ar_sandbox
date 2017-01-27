@@ -120,12 +120,12 @@ void ofApp::setup(){
 	simControls.add(maxSpeed.set("Max Speed", 2, 0, 10));
 	simControls.add(maxForce.set("Max Force", 1, 0, 10));
 	simControls.add(destWeight.set("Goal Weight", 0.1, 0, 1));
-	simControls.add(flockSeparationWeight.set("Separation Weight", 1, 0, 2));
+	simControls.add(flockSeparationWeight.set("Separation `Weight", 1, 0, 2));
 	simControls.add(flockAlignmentWeight.set("Alignment Weight", 0.5, 0, 2));
 	simControls.add(flockCohesionWeight.set("Cohesion Weight", 0.25, 0, 2));
-	simControls.add(flockSeparationRadius.set("Separation Radius", 15, 0, 50));
-	simControls.add(flockAlignmentRadius.set("Alignment Radius", 20, 0, 50));
-	simControls.add(flockCohesionRadius.set("Cohesion Radius", 30, 0, 50));
+	simControls.add(flockSeparationRadius.set("Separation Radius", 15, 0, 250));
+	simControls.add(flockAlignmentRadius.set("Alignment Radius", 20, 0, 250));
+	simControls.add(flockCohesionRadius.set("Cohesion Radius", 30, 0, 250));
 	simControls.add(startRadius.set("Start Radius", 50, 0, 200));
 	simControls.add(endRadius.set("End Radius", 50, 0, 200));
 	simControls.add(sleepTime.set("Sim Sleep Time", 0, 0, 0.1));
@@ -286,7 +286,7 @@ void ofApp::update() {
 
 			//OpenCV data structures
 			cv::Point boidPts[3];
-			cv::Scalar randomCol(randomRange(100, 255, (*boids)[i].id * 123), randomRange(100, 255, (*boids)[i].id * 157), randomRange(100, 255, (*boids)[i].id * 921));
+			cv::Scalar randomCol(randomRange(200, 255, (*boids)[i].id * 123), randomRange(50, 255, (*boids)[i].id * 157), randomRange(50, 255, (*boids)[i].id * 921));
 			
 			
 			//OpenGL Draw over the image, onto the window. - NEEDS TO BE IN THE DRAW FUNCTION. (NOT IN UPDATE)
